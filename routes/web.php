@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AnimalController;
+use App\Http\Controllers\Api\V1\LivestockController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
@@ -18,4 +19,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::resource('animals', AnimalController::class)->only(['index', 'create', 'store', 'show']);
     Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show']);
+    Route::prefix('api/v1')->name('api.v1.')->group(function () {
+        Route::get('/animals', [LivestockController::class, 'animals'])->name('animals.index');
+        Route::get('/batches', [LivestockController::class, 'batches'])->name('batches.index');
+    });
 });

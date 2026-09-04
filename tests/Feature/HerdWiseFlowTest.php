@@ -28,4 +28,12 @@ class HerdWiseFlowTest extends TestCase
         $this->actingAs($user)->post('/animals', ['animal_code' => 'G-001', 'species_id' => $species->id, 'sex' => 'female', 'status' => 'healthy'])->assertRedirect('/animals');
         $this->assertDatabaseHas('animals', ['farm_id' => $farm->id, 'animal_code' => 'G-001']);
     }
+
+    public function test_authenticated_owner_can_read_the_farm_scoped_api(): void
+    {
+        $user = User::factory()->create();
+        $farm = Farm::create(['name' => 'Farm A', 'slug' => 'farm-a']);
+        $farm->users()->attach($user, ['role' => 'owner']);
+        $this->actingAs($user)->getJson('/api/v1/animals')->assertOk()->assertJsonCount(0, 'data');
+    }
 }
