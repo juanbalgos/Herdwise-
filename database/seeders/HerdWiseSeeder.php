@@ -8,6 +8,7 @@ use App\Models\Breed;
 use App\Models\BreedingRecord;
 use App\Models\DewormingRecord;
 use App\Models\Farm;
+use App\Models\FarmAccessEvent;
 use App\Models\HealthRecord;
 use App\Models\LivestockBatch;
 use App\Models\PregnancyRecord;
@@ -42,8 +43,11 @@ class HerdWiseSeeder extends Seeder
         });
 
         $user = User::firstOrCreate(['email' => 'juan@herdwise.test'], ['name' => 'Juan Dela Cruz', 'password' => Hash::make('password')]);
+        $veterinarian = User::firstOrCreate(['email' => 'vet@herdwise.test'], ['name' => 'Dr. Maria Santos', 'password' => Hash::make('password')]);
         $farm = Farm::firstOrCreate(['slug' => 'green-pastures-demo'], ['name' => 'Green Pastures Farm', 'location' => 'Nueva Ecija, Philippines']);
         $farm->users()->syncWithoutDetaching([$user->id => ['role' => 'owner', 'is_active' => true]]);
+        $farm->users()->syncWithoutDetaching([$veterinarian->id => ['role' => 'veterinarian', 'is_active' => true]]);
+        FarmAccessEvent::firstOrCreate(['farm_id' => $farm->id, 'subject_user_id' => $veterinarian->id, 'event_type' => 'veterinarian_access_accepted'], ['actor_user_id' => $user->id, 'metadata' => ['source' => 'demo_seed']]);
 
         $goat = Animal::firstOrCreate(['farm_id' => $farm->id, 'animal_code' => 'G-024'], ['species_id' => $species['GOAT']->id, 'breed_id' => $species['GOAT']->breeds()->where('name', 'Boer')->value('id'), 'ear_tag' => 'ET-1024', 'name' => 'Luna', 'sex' => 'female', 'birth_date' => '2024-03-18', 'status' => 'pregnant', 'location' => 'North Pen', 'created_by' => $user->id]);
         $maleGoat = Animal::firstOrCreate(['farm_id' => $farm->id, 'animal_code' => 'G-009'], ['species_id' => $species['GOAT']->id, 'breed_id' => $species['GOAT']->breeds()->where('name', 'Boer')->value('id'), 'ear_tag' => 'ET-1009', 'name' => 'Bruno', 'sex' => 'male', 'birth_date' => '2023-01-10', 'status' => 'healthy', 'location' => 'Breeding Pen', 'created_by' => $user->id]);
@@ -52,7 +56,7 @@ class HerdWiseSeeder extends Seeder
         $batch = LivestockBatch::firstOrCreate(['farm_id' => $farm->id, 'batch_code' => 'B-2026-003'], ['species_id' => $species['CHICKEN']->id, 'breed_id' => $species['CHICKEN']->breeds()->where('name', 'Broiler')->value('id'), 'started_on' => today()->subDays(23), 'initial_count' => 250, 'current_count' => 246, 'purpose' => 'Meat production', 'status' => 'active', 'location' => 'Poultry House A', 'created_by' => $user->id]);
 
         HealthRecord::firstOrCreate(['farm_id' => $farm->id, 'animal_id' => $pig->id, 'observed_on' => today()->subDay()], ['observation' => 'Reduced appetite and occasional coughing observed during morning rounds.', 'symptoms' => 'Reduced appetite; cough', 'severity' => 'moderate', 'appetite' => 'reduced', 'resulting_status' => 'under_observation', 'recorded_by' => $user->id]);
-        $treatment = Treatment::firstOrCreate(['farm_id' => $farm->id, 'animal_id' => $pig->id, 'treated_on' => today()], ['reason' => 'Supportive care following respiratory observation', 'medication' => 'Treatment recorded from veterinarian instructions', 'veterinarian_name' => 'Dr. Santos', 'follow_up_on' => today()->addDay(), 'recorded_by' => $user->id]);
+        $treatment = Treatment::updateOrCreate(['farm_id' => $farm->id, 'animal_id' => $pig->id, 'treated_on' => today()], ['reason' => 'Supportive care following respiratory observation', 'diagnosis' => 'Suspected respiratory infection', 'medication' => 'Veterinarian-prescribed supportive treatment', 'veterinarian_name' => $veterinarian->name, 'follow_up_on' => today()->addDay(), 'recorded_by' => $veterinarian->id]);
         $vaccination = Vaccination::firstOrCreate(['farm_id' => $farm->id, 'animal_id' => $goat->id, 'vaccine_name' => 'Clostridial vaccine', 'given_on' => today()->subMonths(6)], ['dose' => '2 mL', 'administered_by' => 'Farm technician', 'next_due_on' => today()->addDays(3), 'recorded_by' => $user->id]);
         $deworming = DewormingRecord::firstOrCreate(['farm_id' => $farm->id, 'livestock_batch_id' => $batch->id, 'product_name' => 'Poultry dewormer', 'administered_on' => today()->subMonths(2)], ['dose' => 'Per label and veterinarian guidance', 'administered_by' => 'Juan Dela Cruz', 'next_due_on' => today()->addDays(10), 'recorded_by' => $user->id]);
 

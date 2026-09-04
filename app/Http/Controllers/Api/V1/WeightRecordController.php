@@ -11,7 +11,7 @@ class WeightRecordController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $farm = $request->user()->farms()->wherePivot('is_active', true)->firstOrFail();
+        $farm = $this->currentFarm($request);
 
         return WeightRecordResource::collection($farm->weightRecords()->with(['animal.species', 'batch.species'])->latest('measured_on')->paginate());
     }

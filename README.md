@@ -14,13 +14,16 @@ php artisan serve
 
 For a quick demo without PostgreSQL, set `DB_CONNECTION=sqlite`, remove the other `DB_*` lines, create `database/database.sqlite`, then migrate and seed.
 
-Demo sign-in: `juan@herdwise.test` / `password`
+Demo owner sign-in: `juan@herdwise.test` / `password`
+
+Demo veterinarian sign-in: `vet@herdwise.test` / `password`
 
 QR codes contain a signed link and require a farm team member to sign in before opening the livestock profile. Set `APP_URL` to an address reachable from the scanning phone before printing cards for field use.
 
 ## Architecture decisions
 
 - A `farm_users` membership table holds owner, manager, staff, and veterinarian roles so permissions can grow without changing users.
+- Farm owners issue expiring, email-bound veterinarian invitations. Accepted and revoked access, plus QR scans, are kept in a farm access history.
 - Every livestock record belongs to a farm. Controllers scope reads and writes through the signed-in user's farm.
 - Individual animals and batches are separate because poultry and production groups should not require one QR tag per animal.
 - Species and breeds are reference data, not free text, keeping future reports consistent.

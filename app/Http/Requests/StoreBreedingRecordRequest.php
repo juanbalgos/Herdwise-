@@ -10,7 +10,9 @@ class StoreBreedingRecordRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->farms()->wherePivot('is_active', true)->exists() ?? false;
+        $role = $this->user()?->activeFarm((int) $this->session()->get('current_farm_id', 0))?->pivot?->role;
+
+        return in_array($role, ['owner', 'manager', 'staff'], true);
     }
 
     public function rules(): array

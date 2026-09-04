@@ -9,21 +9,34 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CareActivityController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FarmContextController;
+use App\Http\Controllers\FarmInvitationController;
+use App\Http\Controllers\FarmTeamController;
 use App\Http\Controllers\LivestockIdentificationController;
 use App\Http\Controllers\ReproductionController;
 use App\Http\Controllers\WeightRecordController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
+Route::get('/invitations/{token}', [FarmInvitationController::class, 'show'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:30,1')->name('invitations.show');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+    Route::get('/register/veterinarian', [AuthController::class, 'showVeterinarianRegistration'])->name('veterinarian.register');
+    Route::post('/register/veterinarian', [AuthController::class, 'registerVeterinarian'])->name('veterinarian.register.store');
 });
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/access/waiting', [AuthController::class, 'waitingForAccess'])->name('access.waiting');
+    Route::post('/farm-context', [FarmContextController::class, 'update'])->name('farms.context.update');
+    Route::post('/invitations/{token}/accept', [FarmInvitationController::class, 'accept'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:10,1')->name('invitations.accept');
+    Route::get('/team', [FarmTeamController::class, 'index'])->name('team.index');
+    Route::post('/team/invitations', [FarmTeamController::class, 'storeInvitation'])->name('team.invitations.store');
+    Route::patch('/team/invitations/{invitation}/revoke', [FarmTeamController::class, 'revokeInvitation'])->name('team.invitations.revoke');
+    Route::patch('/team/members/{member}/revoke', [FarmTeamController::class, 'revokeMember'])->name('team.members.revoke');
     Route::resource('animals', AnimalController::class)->only(['index', 'create', 'store', 'show']);
     Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('/identify/animals/{animal}', [LivestockIdentificationController::class, 'scanAnimal'])->middleware('signed')->name('identify.animals.scan');

@@ -21,14 +21,16 @@ class LivestockIdentificationController extends Controller
 {
     public function scanAnimal(Request $request, Animal $animal): RedirectResponse
     {
-        $this->authorizeFarmMember($request, $animal->farm_id);
+        $this->activateFarmContext($request, $animal->farm_id);
+        $this->recordScan($request, $animal->farm_id, 'animal', $animal->id);
 
         return redirect()->route('animals.show', $animal);
     }
 
     public function scanBatch(Request $request, LivestockBatch $batch): RedirectResponse
     {
-        $this->authorizeFarmMember($request, $batch->farm_id);
+        $this->activateFarmContext($request, $batch->farm_id);
+        $this->recordScan($request, $batch->farm_id, 'batch', $batch->id);
 
         return redirect()->route('batches.show', $batch);
     }
@@ -128,6 +130,17 @@ class LivestockIdentificationController extends Controller
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
             'Content-Type' => $result->getMimeType(),
             'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    private function recordScan(Request $request, int $farmId, string $livestockType, int $livestockId): void
+    {
+        $request->user()->accessEventsAsSubject()->create([
+            'farm_id' => $farmId,
+            'actor_user_id' => $request->user()->id,
+            'event_type' => 'qr_scanned',
+            'livestock_type' => $livestockType,
+            'livestock_id' => $livestockId,
         ]);
     }
 }

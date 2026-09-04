@@ -72,4 +72,14 @@ class Farm extends Model
     {
         return $this->hasMany(WeightRecord::class);
     }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(FarmInvitation::class);
+    }
+
+    public function accessEvents(): HasMany
+    {
+        return $this->hasMany(FarmAccessEvent::class);
+    }
 }

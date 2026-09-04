@@ -29,8 +29,9 @@ class ReproductionController extends Controller
     {
         abort_unless(in_array($type, ['breeding', 'pregnancy', 'birth'], true), 404);
         $farm = $this->currentFarm($request);
-        $role = $farm->users()->whereKey($request->user()->id)->firstOrFail()->pivot->role;
+        $role = $farm->pivot->role;
         abort_if($type === 'pregnancy' && ! in_array($role, ['owner', 'manager', 'veterinarian'], true), 403);
+        abort_if(in_array($type, ['breeding', 'birth'], true) && $role === 'veterinarian', 403);
         $females = $farm->animals()->with('species')->where('sex', 'female')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
         $males = $farm->animals()->with('species')->where('sex', 'male')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
         $breedingRecords = $farm->breedingRecords()->with('femaleAnimal.species')->latest('occurred_on')->get();
@@ -115,11 +116,6 @@ class ReproductionController extends Controller
         });
 
         return redirect()->route('reproduction.index')->with('success', 'Birth outcome recorded and the mother’s profile updated.');
-    }
-
-    private function currentFarm(Request $request): Farm
-    {
-        return $request->user()->farms()->wherePivot('is_active', true)->firstOrFail();
     }
 
     private function scheduleReminder(Model $source, Farm $farm, int $animalId, string $type, string $title, ?string $dueOn, int $userId): void

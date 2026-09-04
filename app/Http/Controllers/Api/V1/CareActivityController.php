@@ -12,14 +12,14 @@ class CareActivityController extends Controller
 {
     public function healthRecords(Request $request): AnonymousResourceCollection
     {
-        $farm = $request->user()->farms()->wherePivot('is_active', true)->firstOrFail();
+        $farm = $this->currentFarm($request);
 
         return HealthRecordResource::collection($farm->healthRecords()->with(['animal', 'batch', 'recorder'])->latest('observed_on')->paginate());
     }
 
     public function reminders(Request $request): AnonymousResourceCollection
     {
-        $farm = $request->user()->farms()->wherePivot('is_active', true)->firstOrFail();
+        $farm = $this->currentFarm($request);
 
         return ReminderResource::collection($farm->reminders()->with(['animal', 'batch'])->where('status', 'pending')->orderBy('due_on')->paginate());
     }

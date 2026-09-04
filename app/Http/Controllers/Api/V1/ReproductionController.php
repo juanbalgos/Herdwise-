@@ -11,7 +11,7 @@ class ReproductionController extends Controller
 {
     public function pregnancies(Request $request): AnonymousResourceCollection
     {
-        $farm = $request->user()->farms()->wherePivot('is_active', true)->firstOrFail();
+        $farm = $this->currentFarm($request);
 
         return PregnancyRecordResource::collection($farm->pregnancyRecords()->with(['animal.species', 'breedingRecord'])->latest('checked_on')->paginate());
     }

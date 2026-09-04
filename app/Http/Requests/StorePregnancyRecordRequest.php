@@ -9,7 +9,7 @@ class StorePregnancyRecordRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $role = $this->user()?->farms()->wherePivot('is_active', true)->first()?->pivot?->role;
+        $role = $this->user()?->activeFarm((int) $this->session()->get('current_farm_id', 0))?->pivot?->role;
 
         return in_array($role, ['owner', 'manager', 'veterinarian'], true);
     }

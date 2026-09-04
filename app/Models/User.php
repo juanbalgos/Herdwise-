@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,6 +22,32 @@ class User extends Authenticatable
     public function farms(): BelongsToMany
     {
         return $this->belongsToMany(Farm::class, 'farm_users')->withPivot(['role', 'is_active'])->withTimestamps();
+    }
+
+    public function activeFarm(?int $preferredFarmId = null): ?Farm
+    {
+        if ($preferredFarmId) {
+            $preferredFarm = $this->farms()
+                ->wherePivot('is_active', true)
+                ->whereKey($preferredFarmId)
+                ->first();
+
+            if ($preferredFarm) {
+                return $preferredFarm;
+            }
+        }
+
+        return $this->farms()->wherePivot('is_active', true)->first();
+    }
+
+    public function accessEventsAsSubject(): HasMany
+    {
+        return $this->hasMany(FarmAccessEvent::class, 'subject_user_id');
+    }
+
+    public function accessEventsAsActor(): HasMany
+    {
+        return $this->hasMany(FarmAccessEvent::class, 'actor_user_id');
     }
 
     /**

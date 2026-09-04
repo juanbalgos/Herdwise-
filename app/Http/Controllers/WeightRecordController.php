@@ -27,6 +27,7 @@ class WeightRecordController extends Controller
     public function create(Request $request): View
     {
         $farm = $this->currentFarm($request);
+        abort_if($farm->pivot->role === 'veterinarian', 403);
         $animals = $farm->animals()->with('species')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
         $batches = $farm->batches()->with('species')->where('status', '!=', 'closed')->orderBy('batch_code')->get();
 
@@ -36,6 +37,7 @@ class WeightRecordController extends Controller
     public function store(StoreWeightRecordRequest $request): RedirectResponse
     {
         $farm = $this->currentFarm($request);
+        abort_if($farm->pivot->role === 'veterinarian', 403);
         $data = $request->validated();
         $target = $this->resolveTarget($farm, $data['subject_type'], (int) $data['subject_id']);
         unset($data['subject_type'], $data['subject_id']);
@@ -46,11 +48,6 @@ class WeightRecordController extends Controller
         });
 
         return redirect()->route('weights.index')->with('success', 'Weight recorded'.(filled($data['next_check_on'] ?? null) ? ' and next check scheduled.' : '.'));
-    }
-
-    private function currentFarm(Request $request): Farm
-    {
-        return $request->user()->farms()->wherePivot('is_active', true)->firstOrFail();
     }
 
     /** @return array{subject: Animal|LivestockBatch, foreign_keys: array{animal_id: ?int, livestock_batch_id: ?int}} */

@@ -34,7 +34,7 @@ class CareActivityController extends Controller
     {
         abort_unless(in_array($type, ['health', 'treatment', 'vaccination', 'deworming'], true), 404);
         $farm = $this->currentFarm($request);
-        $role = $farm->users()->whereKey($request->user()->id)->firstOrFail()->pivot->role;
+        $role = $farm->pivot->role;
         abort_if($type === 'treatment' && ! in_array($role, ['owner', 'manager', 'veterinarian'], true), 403);
         $animals = $farm->animals()->with('species')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
         $batches = $farm->batches()->with('species')->where('status', '!=', 'closed')->orderBy('batch_code')->get();
@@ -65,8 +65,11 @@ class CareActivityController extends Controller
         $target = $this->resolveTarget($farm, $data['subject_type'], (int) $data['subject_id']);
         if (filled($data['health_record_id'] ?? null)) {
             $farm->healthRecords()->where($target['foreign_keys'])->findOrFail($data['health_record_id']);
-        } $role = $farm->users()->whereKey($request->user()->id)->firstOrFail()->pivot->role;
+        } $role = $farm->pivot->role;
         abort_if(filled($data['diagnosis'] ?? null) && $role !== 'veterinarian', 403, 'Only an authorized veterinarian can enter a formal diagnosis.');
+        if ($role === 'veterinarian') {
+            $data['veterinarian_name'] = $request->user()->name;
+        }
         unset($data['subject_type'],$data['subject_id']);
         DB::transaction(function () use ($farm, $request, $data, $target): void {
             $treatment = $farm->treatments()->create([...$data, ...$target['foreign_keys'], 'recorded_by' => $request->user()->id]);
@@ -112,11 +115,6 @@ class CareActivityController extends Controller
         $reminder->update(['status' => 'completed']);
 
         return back()->with('success', 'Reminder marked complete.');
-    }
-
-    private function currentFarm(Request $request): Farm
-    {
-        return $request->user()->farms()->wherePivot('is_active', true)->firstOrFail();
     }
 
     /** @return array{subject: Animal|LivestockBatch, foreign_keys: array{animal_id: ?int, livestock_batch_id: ?int}} */
