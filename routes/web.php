@@ -11,6 +11,7 @@ use App\Http\Controllers\CareActivityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FarmContextController;
 use App\Http\Controllers\FarmInvitationController;
+use App\Http\Controllers\FarmReportController;
 use App\Http\Controllers\FarmTeamController;
 use App\Http\Controllers\LivestockIdentificationController;
 use App\Http\Controllers\ReproductionController;
@@ -60,6 +61,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/weights', [WeightRecordController::class, 'index'])->name('weights.index');
     Route::get('/weights/create', [WeightRecordController::class, 'create'])->name('weights.create');
     Route::post('/weights', [WeightRecordController::class, 'store'])->name('weights.store');
+    Route::get('/reports', [FarmReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export/csv', [FarmReportController::class, 'csv'])->name('reports.csv');
+    Route::get('/reports/export/pdf', [FarmReportController::class, 'pdf'])->name('reports.pdf');
     Route::prefix('api/v1')->name('api.v1.')->group(function () {
         Route::get('/animals', [LivestockController::class, 'animals'])->name('animals.index');
         Route::get('/batches', [LivestockController::class, 'batches'])->name('batches.index');
