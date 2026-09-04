@@ -19,6 +19,6 @@ class SpeciesFactory extends Factory
     {
         $name = fake()->unique()->word();
 
-        return ['name' => ucfirst($name), 'code' => strtoupper($name), 'supports_individuals' => true, 'supports_batches' => true];
+        return ['name' => ucfirst($name), 'code' => strtoupper($name), 'supports_individuals' => true, 'supports_batches' => true, 'default_gestation_days' => 150];
     }
 }

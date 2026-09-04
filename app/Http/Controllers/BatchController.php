@@ -42,13 +42,15 @@ class BatchController extends Controller
     public function show(LivestockBatch $batch): View
     {
         abort_unless(request()->user()->farms()->whereKey($batch->farm_id)->exists(), 404);
-        $batch->load(['species', 'breed', 'healthRecords.recorder', 'treatments', 'vaccinations', 'dewormingRecords', 'reminders' => fn ($query) => $query->where('status', 'pending')->orderBy('due_on')]);
+        $batch->load(['species', 'breed', 'healthRecords.recorder', 'treatments', 'vaccinations', 'dewormingRecords', 'weightRecords' => fn ($query) => $query->oldest('measured_on'), 'reminders' => fn ($query) => $query->where('status', 'pending')->orderBy('due_on')]);
         $timeline = $batch->healthRecords->map(fn ($record) => ['date' => $record->observed_on, 'type' => 'Health observation', 'title' => $record->observation, 'meta' => ucfirst($record->severity).' · '.$record->recorder->name])
             ->concat($batch->treatments->map(fn ($record) => ['date' => $record->treated_on, 'type' => 'Treatment', 'title' => $record->reason, 'meta' => $record->medication ?: 'No medication recorded']))
             ->concat($batch->vaccinations->map(fn ($record) => ['date' => $record->given_on, 'type' => 'Vaccination', 'title' => $record->vaccine_name, 'meta' => $record->dose ?: 'Dose not specified']))
             ->concat($batch->dewormingRecords->map(fn ($record) => ['date' => $record->administered_on, 'type' => 'Deworming', 'title' => $record->product_name, 'meta' => $record->dose ?: 'Dose not specified']))
+            ->concat($batch->weightRecords->map(fn ($record) => ['date' => $record->measured_on, 'type' => 'Average weight', 'title' => number_format((float) $record->weight_kg, 2).' kg', 'meta' => 'Sample size: '.$record->sample_size]))
             ->sortByDesc('date')->values();
+        $weightMaximum = max(1, (float) $batch->weightRecords->max('weight_kg'));
 
-        return view('livestock.batch-show', compact('batch', 'timeline'));
+        return view('livestock.batch-show', compact('batch', 'timeline', 'weightMaximum'));
     }
 }

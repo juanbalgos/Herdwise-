@@ -57,4 +57,9 @@ class LivestockBatch extends Model
     {
         return $this->hasMany(Reminder::class);
     }
+
+    public function weightRecords(): HasMany
+    {
+        return $this->hasMany(WeightRecord::class);
+    }
 }

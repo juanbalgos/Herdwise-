@@ -3,10 +3,14 @@
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\Api\V1\CareActivityController as ApiCareActivityController;
 use App\Http\Controllers\Api\V1\LivestockController;
+use App\Http\Controllers\Api\V1\ReproductionController as ApiReproductionController;
+use App\Http\Controllers\Api\V1\WeightRecordController as ApiWeightRecordController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CareActivityController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReproductionController;
+use App\Http\Controllers\WeightRecordController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -28,10 +32,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/activities/vaccinations', [CareActivityController::class, 'storeVaccination'])->name('activities.vaccinations.store');
     Route::post('/activities/deworming', [CareActivityController::class, 'storeDeworming'])->name('activities.deworming.store');
     Route::patch('/reminders/{reminder}/complete', [CareActivityController::class, 'completeReminder'])->name('reminders.complete');
+    Route::get('/reproduction', [ReproductionController::class, 'index'])->name('reproduction.index');
+    Route::get('/reproduction/create/{type}', [ReproductionController::class, 'create'])->name('reproduction.create');
+    Route::post('/reproduction/breeding', [ReproductionController::class, 'storeBreeding'])->name('reproduction.breeding.store');
+    Route::post('/reproduction/pregnancies', [ReproductionController::class, 'storePregnancy'])->name('reproduction.pregnancies.store');
+    Route::post('/reproduction/births', [ReproductionController::class, 'storeBirth'])->name('reproduction.births.store');
+    Route::get('/weights', [WeightRecordController::class, 'index'])->name('weights.index');
+    Route::get('/weights/create', [WeightRecordController::class, 'create'])->name('weights.create');
+    Route::post('/weights', [WeightRecordController::class, 'store'])->name('weights.store');
     Route::prefix('api/v1')->name('api.v1.')->group(function () {
         Route::get('/animals', [LivestockController::class, 'animals'])->name('animals.index');
         Route::get('/batches', [LivestockController::class, 'batches'])->name('batches.index');
         Route::get('/health-records', [ApiCareActivityController::class, 'healthRecords'])->name('health-records.index');
         Route::get('/reminders', [ApiCareActivityController::class, 'reminders'])->name('reminders.index');
+        Route::get('/pregnancies', [ApiReproductionController::class, 'pregnancies'])->name('pregnancies.index');
+        Route::get('/weights', [ApiWeightRecordController::class, 'index'])->name('weights.index');
     });
 });

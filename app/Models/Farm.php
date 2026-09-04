@@ -52,4 +52,24 @@ class Farm extends Model
     {
         return $this->hasMany(Reminder::class);
     }
+
+    public function breedingRecords(): HasMany
+    {
+        return $this->hasMany(BreedingRecord::class);
+    }
+
+    public function pregnancyRecords(): HasMany
+    {
+        return $this->hasMany(PregnancyRecord::class);
+    }
+
+    public function birthRecords(): HasMany
+    {
+        return $this->hasMany(BirthRecord::class);
+    }
+
+    public function weightRecords(): HasMany
+    {
+        return $this->hasMany(WeightRecord::class);
+    }
 }

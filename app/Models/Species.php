@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'code', 'supports_individuals', 'supports_batches'])]
+#[Fillable(['name', 'code', 'supports_individuals', 'supports_batches', 'default_gestation_days'])]
 class Species extends Model
 {
     use HasFactory;

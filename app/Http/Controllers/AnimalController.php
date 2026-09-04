@@ -48,13 +48,18 @@ class AnimalController extends Controller
     public function show(Animal $animal): View
     {
         $this->authorizeFarm($animal);
-        $animal->load(['species', 'breed', 'healthRecords.recorder', 'treatments', 'vaccinations', 'dewormingRecords', 'reminders' => fn ($query) => $query->where('status', 'pending')->orderBy('due_on')]);
+        $animal->load(['species', 'breed', 'healthRecords.recorder', 'treatments', 'vaccinations', 'dewormingRecords', 'breedingRecordsAsFemale.maleAnimal', 'pregnancyRecords', 'birthRecords', 'weightRecords' => fn ($query) => $query->oldest('measured_on'), 'reminders' => fn ($query) => $query->where('status', 'pending')->orderBy('due_on')]);
         $timeline = $animal->healthRecords->map(fn ($record) => ['date' => $record->observed_on, 'type' => 'Health observation', 'title' => $record->observation, 'meta' => ucfirst($record->severity).' · '.$record->recorder->name])
             ->concat($animal->treatments->map(fn ($record) => ['date' => $record->treated_on, 'type' => 'Treatment', 'title' => $record->reason, 'meta' => $record->medication ?: 'No medication recorded']))
             ->concat($animal->vaccinations->map(fn ($record) => ['date' => $record->given_on, 'type' => 'Vaccination', 'title' => $record->vaccine_name, 'meta' => $record->dose ?: 'Dose not specified']))
             ->concat($animal->dewormingRecords->map(fn ($record) => ['date' => $record->administered_on, 'type' => 'Deworming', 'title' => $record->product_name, 'meta' => $record->dose ?: 'Dose not specified']))
+            ->concat($animal->breedingRecordsAsFemale->map(fn ($record) => ['date' => $record->occurred_on, 'type' => 'Breeding', 'title' => ucfirst(str_replace('_', ' ', $record->method)), 'meta' => $record->maleAnimal?->animal_code ?? $record->male_reference ?? 'Male reference not specified']))
+            ->concat($animal->pregnancyRecords->map(fn ($record) => ['date' => $record->checked_on, 'type' => 'Pregnancy check', 'title' => ucfirst(str_replace('_', ' ', $record->status)), 'meta' => $record->expected_delivery_on ? 'Expected '.$record->expected_delivery_on->format('M j, Y') : 'No expected delivery date']))
+            ->concat($animal->birthRecords->map(fn ($record) => ['date' => $record->delivered_on, 'type' => 'Birth', 'title' => $record->live_count.' live of '.$record->offspring_count.' offspring', 'meta' => ucfirst(str_replace('_', ' ', $record->outcome))]))
+            ->concat($animal->weightRecords->map(fn ($record) => ['date' => $record->measured_on, 'type' => 'Weight', 'title' => number_format((float) $record->weight_kg, 2).' kg', 'meta' => $record->measurement_method ?: 'Method not specified']))
             ->sortByDesc('date')->values();
+        $weightMaximum = max(1, (float) $animal->weightRecords->max('weight_kg'));
 
-        return view('livestock.animal-show', compact('animal', 'timeline'));
+        return view('livestock.animal-show', compact('animal', 'timeline', 'weightMaximum'));
     }
 }

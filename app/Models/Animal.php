@@ -57,4 +57,24 @@ class Animal extends Model
     {
         return $this->hasMany(Reminder::class);
     }
+
+    public function breedingRecordsAsFemale(): HasMany
+    {
+        return $this->hasMany(BreedingRecord::class, 'female_animal_id');
+    }
+
+    public function pregnancyRecords(): HasMany
+    {
+        return $this->hasMany(PregnancyRecord::class);
+    }
+
+    public function birthRecords(): HasMany
+    {
+        return $this->hasMany(BirthRecord::class);
+    }
+
+    public function weightRecords(): HasMany
+    {
+        return $this->hasMany(WeightRecord::class);
+    }
 }
