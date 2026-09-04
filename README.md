@@ -1,6 +1,6 @@
 # HerdWise
 
-HerdWise is a multi-farm livestock monitoring system for medium-scale Philippine farms. This first vertical slice includes owner registration, farm creation, role-ready farm membership, a dashboard, individual animal records, livestock batches, search, and profile views.
+HerdWise is a multi-farm livestock monitoring system for medium-scale Philippine farms. The working system includes owner registration, farm creation, role-ready farm membership, a dashboard, individual animals, livestock batches, search, health observations, veterinarian-aware treatments, vaccination, deworming, automatic reminders, and livestock timelines.
 
 ## Run locally
 
@@ -22,4 +22,6 @@ Demo sign-in: `juan@herdwise.test` / `password`
 - Every livestock record belongs to a farm. Controllers scope reads and writes through the signed-in user's farm.
 - Individual animals and batches are separate because poultry and production groups should not require one QR tag per animal.
 - Species and breeds are reference data, not free text, keeping future reports consistent.
-- Health, vaccination, deworming, breeding, reminder, QR, audit, report, and AI modules should be added as records linked to `farm_id` and either an animal or batch. AI must receive curated record context from the backend and must never query the database directly or diagnose disease.
+- Observations, treatments, vaccination, and deworming are separate records because they represent different responsibilities and reporting needs. Only veterinarian accounts may enter a formal diagnosis.
+- A next-due or follow-up date creates a reminder linked to its source record, making schedules traceable instead of duplicating manual tasks.
+- Breeding, QR, audit, report, and AI modules should follow the same farm and livestock boundaries. AI must receive curated record context from the backend and must never query the database directly or diagnose disease.

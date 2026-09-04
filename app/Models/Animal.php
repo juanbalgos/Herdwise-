@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['farm_id', 'species_id', 'breed_id', 'animal_code', 'ear_tag', 'name', 'sex', 'birth_date', 'status', 'location', 'notes', 'created_by'])]
 class Animal extends Model
 {
+    use HasFactory;
+
     protected function casts(): array
     {
         return ['birth_date' => 'date'];
@@ -27,5 +31,30 @@ class Animal extends Model
     public function breed(): BelongsTo
     {
         return $this->belongsTo(Breed::class);
+    }
+
+    public function healthRecords(): HasMany
+    {
+        return $this->hasMany(HealthRecord::class);
+    }
+
+    public function treatments(): HasMany
+    {
+        return $this->hasMany(Treatment::class);
+    }
+
+    public function vaccinations(): HasMany
+    {
+        return $this->hasMany(Vaccination::class);
+    }
+
+    public function dewormingRecords(): HasMany
+    {
+        return $this->hasMany(DewormingRecord::class);
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
     }
 }
