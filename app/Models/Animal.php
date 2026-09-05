@@ -3,19 +3,31 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable(['farm_id', 'species_id', 'breed_id', 'animal_code', 'ear_tag', 'name', 'sex', 'birth_date', 'status', 'location', 'notes', 'created_by'])]
+#[Fillable(['farm_id', 'species_id', 'breed_id', 'animal_code', 'ear_tag', 'name', 'sex', 'birth_date', 'status', 'location', 'notes', 'created_by', 'status_before_archive', 'archived_at', 'archived_by'])]
 class Animal extends Model
 {
     use HasFactory;
 
     protected function casts(): array
     {
-        return ['birth_date' => 'date'];
+        return ['birth_date' => 'date', 'archived_at' => 'datetime'];
+    }
+
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
     }
 
     public function farm(): BelongsTo
@@ -76,5 +88,15 @@ class Animal extends Model
     public function weightRecords(): HasMany
     {
         return $this->hasMany(WeightRecord::class);
+    }
+
+    public function archiver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'archived_by');
+    }
+
+    public function changeLogs(): MorphMany
+    {
+        return $this->morphMany(LivestockChangeLog::class, 'subject');
     }
 }

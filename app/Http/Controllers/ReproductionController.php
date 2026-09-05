@@ -32,8 +32,8 @@ class ReproductionController extends Controller
         $role = $farm->pivot->role;
         abort_if($type === 'pregnancy' && ! in_array($role, ['owner', 'manager', 'veterinarian'], true), 403);
         abort_if(in_array($type, ['breeding', 'birth'], true) && $role === 'veterinarian', 403);
-        $females = $farm->animals()->with('species')->where('sex', 'female')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
-        $males = $farm->animals()->with('species')->where('sex', 'male')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
+        $females = $farm->animals()->notArchived()->with('species')->where('sex', 'female')->whereNotIn('status', ['sold', 'deceased'])->orderBy('animal_code')->get();
+        $males = $farm->animals()->notArchived()->with('species')->where('sex', 'male')->whereNotIn('status', ['sold', 'deceased'])->orderBy('animal_code')->get();
         $breedingRecords = $farm->breedingRecords()->with('femaleAnimal.species')->latest('occurred_on')->get();
         $pregnancies = $farm->pregnancyRecords()->with('animal.species')->where('status', 'confirmed')->whereDoesntHave('birthRecords')->orderBy('expected_delivery_on')->get();
 
@@ -44,9 +44,9 @@ class ReproductionController extends Controller
     {
         $farm = $this->currentFarm($request);
         $data = $request->validated();
-        $female = $farm->animals()->with('species')->where('sex', 'female')->findOrFail($data['female_animal_id']);
+        $female = $farm->animals()->notArchived()->with('species')->where('sex', 'female')->findOrFail($data['female_animal_id']);
         if (filled($data['male_animal_id'] ?? null)) {
-            $male = $farm->animals()->where('sex', 'male')->findOrFail($data['male_animal_id']);
+            $male = $farm->animals()->notArchived()->where('sex', 'male')->findOrFail($data['male_animal_id']);
             if ($male->species_id !== $female->species_id) {
                 throw ValidationException::withMessages(['male_animal_id' => 'The selected male must be the same species as the female.']);
             }
@@ -64,7 +64,7 @@ class ReproductionController extends Controller
     {
         $farm = $this->currentFarm($request);
         $data = $request->validated();
-        $animal = $farm->animals()->with('species')->where('sex', 'female')->findOrFail($data['animal_id']);
+        $animal = $farm->animals()->notArchived()->with('species')->where('sex', 'female')->findOrFail($data['animal_id']);
         $breeding = null;
         if (filled($data['breeding_record_id'] ?? null)) {
             $breeding = $farm->breedingRecords()->where('female_animal_id', $animal->id)->findOrFail($data['breeding_record_id']);
@@ -103,7 +103,7 @@ class ReproductionController extends Controller
     {
         $farm = $this->currentFarm($request);
         $data = $request->validated();
-        $animal = $farm->animals()->where('sex', 'female')->findOrFail($data['animal_id']);
+        $animal = $farm->animals()->notArchived()->where('sex', 'female')->findOrFail($data['animal_id']);
         $pregnancy = null;
         if (filled($data['pregnancy_record_id'] ?? null)) {
             $pregnancy = $farm->pregnancyRecords()->where('animal_id', $animal->id)->where('status', 'confirmed')->findOrFail($data['pregnancy_record_id']);

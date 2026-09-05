@@ -83,7 +83,7 @@ class FarmReportController extends Controller
     /** @return array<string, mixed> */
     private function buildReport(Farm $farm, CarbonImmutable $startDate, CarbonImmutable $endDate): array
     {
-        $individualSpecies = $farm->animals()
+        $individualSpecies = $farm->animals()->notArchived()
             ->selectRaw('species_id, COUNT(*) AS total')
             ->groupBy('species_id')
             ->pluck('total', 'species_id');
@@ -110,10 +110,10 @@ class FarmReportController extends Controller
             });
 
         $inventory = [
-            'individuals' => $farm->animals()->count(),
+            'individuals' => $farm->animals()->notArchived()->count(),
             'active_batches' => $farm->batches()->where('status', 'active')->count(),
             'batch_population' => (int) $farm->batches()->where('status', 'active')->sum('current_count'),
-            'statuses' => $farm->animals()->selectRaw('status, COUNT(*) AS total')->groupBy('status')->orderBy('status')->pluck('total', 'status'),
+            'statuses' => $farm->animals()->notArchived()->selectRaw('status, COUNT(*) AS total')->groupBy('status')->orderBy('status')->pluck('total', 'status'),
             'species' => $speciesBreakdown,
         ];
 
@@ -167,10 +167,10 @@ class FarmReportController extends Controller
     private function writeCsvRows($stream, Farm $farm, CarbonImmutable $startDate, CarbonImmutable $endDate, string $section): void
     {
         if (in_array($section, ['all', 'inventory'], true)) {
-            $farm->animals()->with('species')->lazyById(200)->each(function ($animal) use ($stream): void {
+            $farm->animals()->notArchived()->with('species')->lazyById(200)->each(function ($animal) use ($stream): void {
                 $this->putCsv($stream, ['Inventory', 'Individual animal', $animal->animal_code, $animal->species->name, $animal->created_at->toDateString(), $animal->name ?: 'Registered animal', $animal->status, '']);
             });
-            $farm->batches()->with('species')->lazyById(200)->each(function ($batch) use ($stream): void {
+            $farm->batches()->notArchived()->with('species')->lazyById(200)->each(function ($batch) use ($stream): void {
                 $this->putCsv($stream, ['Inventory', 'Livestock batch', $batch->batch_code, $batch->species->name, $batch->started_on->toDateString(), ($batch->purpose ?: 'Registered batch').' - '.$batch->current_count.' current animals', $batch->status, '']);
             });
         }

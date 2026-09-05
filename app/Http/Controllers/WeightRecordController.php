@@ -18,8 +18,8 @@ class WeightRecordController extends Controller
     {
         $farm = $this->currentFarm($request);
         $records = $farm->weightRecords()->with(['animal.species', 'batch.species', 'recorder'])->latest('measured_on')->paginate(30);
-        $latestAnimals = $farm->animals()->with(['species', 'weightRecords' => fn ($query) => $query->latest('measured_on')->limit(6)])->has('weightRecords')->get();
-        $latestBatches = $farm->batches()->with(['species', 'weightRecords' => fn ($query) => $query->latest('measured_on')->limit(6)])->has('weightRecords')->get();
+        $latestAnimals = $farm->animals()->notArchived()->with(['species', 'weightRecords' => fn ($query) => $query->latest('measured_on')->limit(6)])->has('weightRecords')->get();
+        $latestBatches = $farm->batches()->notArchived()->with(['species', 'weightRecords' => fn ($query) => $query->latest('measured_on')->limit(6)])->has('weightRecords')->get();
 
         return view('weights.index', compact('records', 'latestAnimals', 'latestBatches'));
     }
@@ -28,8 +28,8 @@ class WeightRecordController extends Controller
     {
         $farm = $this->currentFarm($request);
         abort_if($farm->pivot->role === 'veterinarian', 403);
-        $animals = $farm->animals()->with('species')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
-        $batches = $farm->batches()->with('species')->where('status', '!=', 'closed')->orderBy('batch_code')->get();
+        $animals = $farm->animals()->notArchived()->with('species')->whereNotIn('status', ['sold', 'deceased'])->orderBy('animal_code')->get();
+        $batches = $farm->batches()->notArchived()->with('species')->where('status', '!=', 'closed')->orderBy('batch_code')->get();
 
         return view('weights.create', compact('animals', 'batches'));
     }
@@ -54,12 +54,12 @@ class WeightRecordController extends Controller
     private function resolveTarget(Farm $farm, string $subjectType, int $subjectId): array
     {
         if ($subjectType === 'animal') {
-            $animal = $farm->animals()->findOrFail($subjectId);
+            $animal = $farm->animals()->notArchived()->findOrFail($subjectId);
 
             return ['subject' => $animal, 'foreign_keys' => ['animal_id' => $animal->id, 'livestock_batch_id' => null]];
         }
 
-        $batch = $farm->batches()->findOrFail($subjectId);
+        $batch = $farm->batches()->notArchived()->findOrFail($subjectId);
 
         return ['subject' => $batch, 'foreign_keys' => ['animal_id' => null, 'livestock_batch_id' => $batch->id]];
     }

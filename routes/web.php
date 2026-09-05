@@ -38,8 +38,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/team/invitations', [FarmTeamController::class, 'storeInvitation'])->name('team.invitations.store');
     Route::patch('/team/invitations/{invitation}/revoke', [FarmTeamController::class, 'revokeInvitation'])->name('team.invitations.revoke');
     Route::patch('/team/members/{member}/revoke', [FarmTeamController::class, 'revokeMember'])->name('team.members.revoke');
-    Route::resource('animals', AnimalController::class)->only(['index', 'create', 'store', 'show']);
-    Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('animals', AnimalController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    Route::patch('/animals/{animal}/archive', [AnimalController::class, 'archive'])->name('animals.archive');
+    Route::patch('/animals/{animal}/restore', [AnimalController::class, 'restore'])->name('animals.restore');
+    Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    Route::patch('/batches/{batch}/archive', [BatchController::class, 'archive'])->name('batches.archive');
+    Route::patch('/batches/{batch}/restore', [BatchController::class, 'restore'])->name('batches.restore');
     Route::get('/identify/animals/{animal}', [LivestockIdentificationController::class, 'scanAnimal'])->middleware('signed')->name('identify.animals.scan');
     Route::get('/identify/batches/{batch}', [LivestockIdentificationController::class, 'scanBatch'])->middleware('signed')->name('identify.batches.scan');
     Route::get('/animals/{animal}/qr-code', [LivestockIdentificationController::class, 'animalQrCode'])->name('animals.qr-code');

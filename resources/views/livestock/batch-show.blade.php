@@ -1,6 +1,41 @@
-@extends('layouts.app') @section('title',$batch->batch_code.' · HerdWise') @section('heading',$batch->batch_code) @section('content')
-<a class="back" href="{{ route('batches.index') }}">← Back to batches</a><div class="profile-actions"><a class="btn" href="{{ route('activities.create',['type'=>'health','subject_type'=>'batch','subject_id'=>$batch->id]) }}">＋ Health observation</a><a class="outline compact" href="{{ route('activities.create',['type'=>'vaccination','subject_type'=>'batch','subject_id'=>$batch->id]) }}">Vaccination</a><a class="outline compact" href="{{ route('activities.create',['type'=>'deworming','subject_type'=>'batch','subject_id'=>$batch->id]) }}">Deworming</a><a class="outline compact" href="{{ route('activities.create',['type'=>'treatment','subject_type'=>'batch','subject_id'=>$batch->id]) }}">Treatment</a>@if($currentFarmRole!=='veterinarian')<a class="outline compact" href="{{ route('weights.create',['subject_type'=>'batch','subject_id'=>$batch->id]) }}">Weight</a>@endif<a class="outline compact qr-action" href="{{ route('batches.print-card',$batch) }}">▦ Print QR card</a></div>
-<div class="profile care-profile"><section class="panel"><span class="eyebrow">BATCH PROFILE</span><h2>{{ $batch->species->name }} group</h2><span class="pill {{ $batch->status }}">{{ str_replace('_',' ',$batch->status) }}</span><dl><div><dt>Breed / type</dt><dd>{{ $batch->breed?->name ?: 'Not specified' }}</dd></div><div><dt>Started</dt><dd>{{ $batch->started_on->format('M j, Y') }}</dd></div><div><dt>Initial population</dt><dd>{{ number_format($batch->initial_count) }}</dd></div><div><dt>Current population</dt><dd>{{ number_format($batch->current_count) }}</dd></div><div><dt>Purpose</dt><dd>{{ $batch->purpose ?: 'Not set' }}</dd></div><div><dt>Location</dt><dd>{{ $batch->location ?: 'Not set' }}</dd></div></dl></section><section class="panel reminder-card"><span class="eyebrow">UPCOMING</span><h3>{{ $batch->reminders->count() }} open reminders</h3>@forelse($batch->reminders as $reminder)<div class="profile-reminder"><span>{{ $reminder->due_on->format('M d') }}</span><p><b>{{ $reminder->title }}</b><small>{{ $reminder->due_on->diffForHumans() }}</small></p></div>@empty<div class="coming small"><span>✓</span><b>No scheduled care</b><p>Add a next-due date to create one.</p></div>@endforelse</section></div>
-@if($batch->weightRecords->isNotEmpty())<section class="panel timeline-panel growth-summary"><span class="eyebrow">AVERAGE GROWTH TREND</span><h3>{{ number_format((float)$batch->weightRecords->last()->weight_kg,2) }} kg latest sampled average</h3><div class="bar-chart timeline-chart">@foreach($batch->weightRecords as $weight)<span style="height:{{ max(8,((float)$weight->weight_kg/$weightMaximum)*100) }}%" title="{{ $weight->measured_on->format('M j') }}: {{ $weight->weight_kg }} kg"></span>@endforeach</div><div class="timeline-chart-labels"><span>{{ $batch->weightRecords->first()->measured_on->format('M j') }}</span><span>{{ $batch->weightRecords->last()->measured_on->format('M j') }}</span></div></section>@endif
-<section class="panel timeline-panel"><div class="panel-head"><div><span class="eyebrow">BATCH HISTORY</span><h3>Timeline</h3></div><span class="muted">{{ $timeline->count() }} recorded events</span></div><div class="timeline">@forelse($timeline as $event)<div class="timeline-event"><time><b>{{ $event['date']->format('d') }}</b><small>{{ strtoupper($event['date']->format('M Y')) }}</small></time><span></span><div><small>{{ strtoupper($event['type']) }}</small><h4>{{ $event['title'] }}</h4><p>{{ $event['meta'] }}</p></div></div>@empty<div class="empty-state"><span>⌁</span><h3>No history yet</h3><p>Collective health and care records will build this batch history.</p></div>@endforelse</div></section>
+@extends('layouts.app')
+@section('title', $batch->batch_code.' · HerdWise')
+@section('heading', $batch->batch_code)
+
+@section('content')
+<a class="back" href="{{ route('batches.index', $batch->archived_at ? ['view' => 'archived'] : []) }}">← Back to batches</a>
+
+@if($batch->archived_at)
+    <div class="archive-banner"><span>ARCHIVED RECORD</span><p>This batch remains available for history and QR identification, but it is excluded from daily operations.</p><small>Archived {{ $batch->archived_at->format('M j, Y') }}{{ $batch->archiver ? ' by '.$batch->archiver->name : '' }}</small></div>
+@endif
+
+<div class="profile-actions">
+    @if(! $batch->archived_at)
+        <a class="btn" href="{{ route('activities.create', ['type' => 'health', 'subject_type' => 'batch', 'subject_id' => $batch->id]) }}">＋ Health observation</a>
+        <a class="outline compact" href="{{ route('activities.create', ['type' => 'vaccination', 'subject_type' => 'batch', 'subject_id' => $batch->id]) }}">Vaccination</a>
+        <a class="outline compact" href="{{ route('activities.create', ['type' => 'deworming', 'subject_type' => 'batch', 'subject_id' => $batch->id]) }}">Deworming</a>
+        <a class="outline compact" href="{{ route('activities.create', ['type' => 'treatment', 'subject_type' => 'batch', 'subject_id' => $batch->id]) }}">Treatment</a>
+        @if($currentFarmRole !== 'veterinarian')
+            <a class="outline compact" href="{{ route('batches.edit', $batch) }}">Edit details</a>
+            <a class="outline compact" href="{{ route('weights.create', ['subject_type' => 'batch', 'subject_id' => $batch->id]) }}">Weight</a>
+        @endif
+    @elseif(in_array($currentFarmRole, ['owner', 'manager'], true))
+        <form method="post" action="{{ route('batches.restore', $batch) }}">@csrf @method('patch')<button class="btn">↻ Restore batch</button></form>
+    @endif
+    <a class="outline compact qr-action" href="{{ route('batches.print-card', $batch) }}">▦ Print QR card</a>
+    @if(! $batch->archived_at && in_array($currentFarmRole, ['owner', 'manager'], true))
+        <form method="post" action="{{ route('batches.archive', $batch) }}" onsubmit="return confirm('Archive this batch and cancel its pending reminders?')">@csrf @method('patch')<button class="outline compact danger-outline">Archive</button></form>
+    @endif
+</div>
+
+<div class="profile care-profile">
+    <section class="panel"><span class="eyebrow">BATCH PROFILE</span><h2>{{ $batch->species->name }} group</h2><span class="pill {{ $batch->status }}">{{ str_replace('_', ' ', $batch->status) }}</span><dl><div><dt>Breed / type</dt><dd>{{ $batch->breed?->name ?: 'Not specified' }}</dd></div><div><dt>Started</dt><dd>{{ $batch->started_on->format('M j, Y') }}</dd></div><div><dt>Initial population</dt><dd>{{ number_format($batch->initial_count) }}</dd></div><div><dt>Current population</dt><dd>{{ number_format($batch->current_count) }}</dd></div><div><dt>Purpose</dt><dd>{{ $batch->purpose ?: 'Not set' }}</dd></div><div><dt>Location</dt><dd>{{ $batch->location ?: 'Not set' }}</dd></div></dl></section>
+    <section class="panel reminder-card"><span class="eyebrow">UPCOMING</span><h3>{{ $batch->reminders->count() }} open reminders</h3>@forelse($batch->reminders as $reminder)<div class="profile-reminder"><span>{{ $reminder->due_on->format('M d') }}</span><p><b>{{ $reminder->title }}</b><small>{{ $reminder->due_on->diffForHumans() }}</small></p></div>@empty<div class="coming small"><span>✓</span><b>No scheduled care</b><p>{{ $batch->archived_at ? 'Archived records do not have active reminders.' : 'Add a next-due date to create one.' }}</p></div>@endforelse</section>
+</div>
+
+@if($batch->weightRecords->isNotEmpty())
+<section class="panel timeline-panel growth-summary"><span class="eyebrow">AVERAGE GROWTH TREND</span><h3>{{ number_format((float) $batch->weightRecords->last()->weight_kg, 2) }} kg latest sampled average</h3><div class="bar-chart timeline-chart">@foreach($batch->weightRecords as $weight)<span style="height:{{ max(8, ((float) $weight->weight_kg / $weightMaximum) * 100) }}%" title="{{ $weight->measured_on->format('M j') }}: {{ $weight->weight_kg }} kg"></span>@endforeach</div><div class="timeline-chart-labels"><span>{{ $batch->weightRecords->first()->measured_on->format('M j') }}</span><span>{{ $batch->weightRecords->last()->measured_on->format('M j') }}</span></div></section>
+@endif
+
+<section class="panel timeline-panel"><div class="panel-head"><div><span class="eyebrow">BATCH HISTORY</span><h3>Timeline</h3></div><span class="muted">{{ $timeline->count() }} recorded events</span></div><div class="timeline">@forelse($timeline as $event)<div class="timeline-event"><time><b>{{ $event['date']->format('d') }}</b><small>{{ strtoupper($event['date']->format('M Y')) }}</small></time><span></span><div><small>{{ strtoupper($event['type']) }}</small><h4>{{ $event['title'] }}</h4><p>{{ $event['meta'] }}</p></div></div>@empty<div class="empty-state"><span>⌁</span><h3>No history yet</h3><p>Health, management, and registry changes will build a permanent chronological history here.</p></div>@endforelse</div></section>
 @endsection

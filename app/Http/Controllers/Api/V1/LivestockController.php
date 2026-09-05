@@ -14,13 +14,13 @@ class LivestockController extends Controller
     {
         $farm = $this->currentFarm($request);
 
-        return AnimalResource::collection($farm->animals()->with(['species', 'breed'])->latest()->paginate());
+        return AnimalResource::collection($farm->animals()->notArchived()->with(['species', 'breed'])->latest()->paginate());
     }
 
     public function batches(Request $request): AnonymousResourceCollection
     {
         $farm = $this->currentFarm($request);
 
-        return LivestockBatchResource::collection($farm->batches()->with(['species', 'breed'])->latest()->paginate());
+        return LivestockBatchResource::collection($farm->batches()->notArchived()->with(['species', 'breed'])->latest()->paginate());
     }
 }

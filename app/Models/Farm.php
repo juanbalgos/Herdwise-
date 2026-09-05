@@ -82,4 +82,9 @@ class Farm extends Model
     {
         return $this->hasMany(FarmAccessEvent::class);
     }
+
+    public function livestockChangeLogs(): HasMany
+    {
+        return $this->hasMany(LivestockChangeLog::class);
+    }
 }

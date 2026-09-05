@@ -36,8 +36,8 @@ class CareActivityController extends Controller
         $farm = $this->currentFarm($request);
         $role = $farm->pivot->role;
         abort_if($type === 'treatment' && ! in_array($role, ['owner', 'manager', 'veterinarian'], true), 403);
-        $animals = $farm->animals()->with('species')->whereNotIn('status', ['sold', 'deceased', 'archived'])->orderBy('animal_code')->get();
-        $batches = $farm->batches()->with('species')->where('status', '!=', 'closed')->orderBy('batch_code')->get();
+        $animals = $farm->animals()->notArchived()->with('species')->whereNotIn('status', ['sold', 'deceased'])->orderBy('animal_code')->get();
+        $batches = $farm->batches()->notArchived()->with('species')->where('status', '!=', 'closed')->orderBy('batch_code')->get();
 
         return view('activities.create', compact('type', 'animals', 'batches', 'role'));
     }
@@ -121,10 +121,12 @@ class CareActivityController extends Controller
     private function resolveTarget(Farm $farm, string $subjectType, int $subjectId): array
     {
         if ($subjectType === 'animal') {
-            $animal = $farm->animals()->findOrFail($subjectId);
+            $animal = $farm->animals()->notArchived()->findOrFail($subjectId);
 
             return ['subject' => $animal, 'foreign_keys' => ['animal_id' => $animal->id, 'livestock_batch_id' => null]];
-        } $batch = $farm->batches()->findOrFail($subjectId);
+        }
+
+        $batch = $farm->batches()->notArchived()->findOrFail($subjectId);
 
         return ['subject' => $batch, 'foreign_keys' => ['animal_id' => null, 'livestock_batch_id' => $batch->id]];
     }
@@ -133,7 +135,9 @@ class CareActivityController extends Controller
     {
         if (! $dueOn) {
             return;
-        } $source->reminder()->create([...$foreignKeys, 'farm_id' => $farm->id, 'type' => $type, 'title' => $title, 'due_on' => $dueOn, 'status' => 'pending', 'created_by' => $userId]);
+        }
+
+        $source->reminder()->create([...$foreignKeys, 'farm_id' => $farm->id, 'type' => $type, 'title' => $title, 'due_on' => $dueOn, 'status' => 'pending', 'created_by' => $userId]);
     }
 
     private function targetLabel(Animal|LivestockBatch $subject): string
