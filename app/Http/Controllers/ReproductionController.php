@@ -22,7 +22,12 @@ class ReproductionController extends Controller
         $recentBreeding = $farm->breedingRecords()->with(['femaleAnimal.species', 'maleAnimal'])->latest('occurred_on')->limit(8)->get();
         $recentBirths = $farm->birthRecords()->with('animal.species')->latest('delivered_on')->limit(8)->get();
 
-        return view('reproduction.index', compact('activePregnancies', 'recentBreeding', 'recentBirths'));
+        return view('reproduction.index', [
+            'activePregnancies' => $activePregnancies,
+            'recentBreeding' => $recentBreeding,
+            'recentBirths' => $recentBirths,
+            'currentFarmRole' => $farm->pivot->role,
+        ]);
     }
 
     public function create(Request $request, string $type): View

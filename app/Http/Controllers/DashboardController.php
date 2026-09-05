@@ -14,6 +14,12 @@ class DashboardController extends Controller
         $batches = $farm->batches()->notArchived()->with('species')->latest()->get();
         $reminders = $farm->reminders()->with(['animal', 'batch'])->where('status', 'pending')->orderBy('due_on')->limit(6)->get();
 
-        return view('dashboard', compact('farm', 'animals', 'batches', 'reminders'));
+        return view('dashboard', [
+            'farm' => $farm,
+            'animals' => $animals,
+            'batches' => $batches,
+            'reminders' => $reminders,
+            'currentFarmRole' => $farm->pivot->role,
+        ]);
     }
 }

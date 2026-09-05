@@ -17,6 +17,30 @@ class BreedingAndGrowthFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_owner_can_view_the_reproduction_overview(): void
+    {
+        [$user, $farm] = $this->farmWithFemale();
+
+        $this->actingAs($user)
+            ->withSession(['current_farm_id' => $farm->id])
+            ->get('/reproduction')
+            ->assertOk()
+            ->assertSee('From breeding to birth.')
+            ->assertSee('Record breeding');
+    }
+
+    public function test_owner_can_view_the_growth_overview(): void
+    {
+        [$user, $farm] = $this->farmWithFemale();
+
+        $this->actingAs($user)
+            ->withSession(['current_farm_id' => $farm->id])
+            ->get('/weights')
+            ->assertOk()
+            ->assertSee('Measure progress over time.')
+            ->assertSee('Record weight');
+    }
+
     public function test_breeding_event_schedules_a_farm_scoped_pregnancy_check(): void
     {
         [$user,$farm,$female,$species] = $this->farmWithFemale();

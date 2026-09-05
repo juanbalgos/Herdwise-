@@ -36,4 +36,18 @@ class HerdWiseFlowTest extends TestCase
         $farm->users()->attach($user, ['role' => 'owner']);
         $this->actingAs($user)->getJson('/api/v1/animals')->assertOk()->assertJsonCount(0, 'data');
     }
+
+    public function test_authenticated_owner_can_view_the_dashboard(): void
+    {
+        $user = User::factory()->create();
+        $farm = Farm::factory()->create(['name' => 'Farm A']);
+        $farm->users()->attach($user, ['role' => 'owner', 'is_active' => true]);
+
+        $this->actingAs($user)
+            ->withSession(['current_farm_id' => $farm->id])
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Your herd, clearly understood.')
+            ->assertSee('Add livestock');
+    }
 }

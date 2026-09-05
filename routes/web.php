@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CareActivityController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FarmAssistantController;
 use App\Http\Controllers\FarmContextController;
 use App\Http\Controllers\FarmInvitationController;
 use App\Http\Controllers\FarmReportController;
@@ -72,6 +73,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [FarmReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export/csv', [FarmReportController::class, 'csv'])->name('reports.csv');
     Route::get('/reports/export/pdf', [FarmReportController::class, 'pdf'])->name('reports.pdf');
+    Route::get('/assistant', [FarmAssistantController::class, 'index'])->name('assistant.index');
+    Route::post('/assistant', [FarmAssistantController::class, 'ask'])->middleware('throttle:10,1')->name('assistant.ask');
     Route::prefix('api/v1')->name('api.v1.')->group(function () {
         Route::get('/animals', [LivestockController::class, 'animals'])->name('animals.index');
         Route::get('/batches', [LivestockController::class, 'batches'])->name('batches.index');

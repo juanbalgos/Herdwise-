@@ -21,7 +21,12 @@ class WeightRecordController extends Controller
         $latestAnimals = $farm->animals()->notArchived()->with(['species', 'weightRecords' => fn ($query) => $query->latest('measured_on')->limit(6)])->has('weightRecords')->get();
         $latestBatches = $farm->batches()->notArchived()->with(['species', 'weightRecords' => fn ($query) => $query->latest('measured_on')->limit(6)])->has('weightRecords')->get();
 
-        return view('weights.index', compact('records', 'latestAnimals', 'latestBatches'));
+        return view('weights.index', [
+            'records' => $records,
+            'latestAnimals' => $latestAnimals,
+            'latestBatches' => $latestBatches,
+            'currentFarmRole' => $farm->pivot->role,
+        ]);
     }
 
     public function create(Request $request): View
