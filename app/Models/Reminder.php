@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-#[Fillable(['farm_id', 'animal_id', 'livestock_batch_id', 'type', 'title', 'due_on', 'status', 'priority', 'source_type', 'source_id', 'notes', 'created_by'])]
+#[Fillable(['farm_id', 'animal_id', 'livestock_batch_id', 'type', 'title', 'due_on', 'status', 'priority', 'source_type', 'source_id', 'notes', 'created_by', 'notified_at'])]
 class Reminder extends Model
 {
     /** @use HasFactory<ReminderFactory> */
@@ -17,7 +17,7 @@ class Reminder extends Model
 
     protected function casts(): array
     {
-        return ['due_on' => 'date'];
+        return ['due_on' => 'date', 'notified_at' => 'datetime'];
     }
 
     public function farm(): BelongsTo

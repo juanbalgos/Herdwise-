@@ -49,7 +49,10 @@
                 @endif
                 <h1>@yield('heading')</h1>
             </div>
-            <a class="icon-btn" href="{{ route('activities.index') }}" title="Care reminders">♢</a>
+            <a class="icon-btn notification-button {{ request()->routeIs('notifications.*') ? 'active' : '' }}" href="{{ route('notifications.index') }}" title="Notifications" aria-label="{{ $unreadNotificationCount }} unread reminder {{ str('notification')->plural($unreadNotificationCount) }}">
+                ♢
+                @if($unreadNotificationCount > 0)<span>{{ min($unreadNotificationCount, 99) }}</span>@endif
+            </a>
         </header>
         <section class="content">
             @if(session('success'))<div class="flash">✓ {{ session('success') }}</div>@endif

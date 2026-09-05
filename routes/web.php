@@ -14,6 +14,7 @@ use App\Http\Controllers\FarmInvitationController;
 use App\Http\Controllers\FarmReportController;
 use App\Http\Controllers\FarmTeamController;
 use App\Http\Controllers\LivestockIdentificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReproductionController;
 use App\Http\Controllers\WeightRecordController;
 use Illuminate\Support\Facades\Route;
@@ -57,6 +58,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/activities/vaccinations', [CareActivityController::class, 'storeVaccination'])->name('activities.vaccinations.store');
     Route::post('/activities/deworming', [CareActivityController::class, 'storeDeworming'])->name('activities.deworming.store');
     Route::patch('/reminders/{reminder}/complete', [CareActivityController::class, 'completeReminder'])->name('reminders.complete');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->whereUuid('notification')->name('notifications.read');
     Route::get('/reproduction', [ReproductionController::class, 'index'])->name('reproduction.index');
     Route::get('/reproduction/create/{type}', [ReproductionController::class, 'create'])->name('reproduction.create');
     Route::post('/reproduction/breeding', [ReproductionController::class, 'storeBreeding'])->name('reproduction.breeding.store');
