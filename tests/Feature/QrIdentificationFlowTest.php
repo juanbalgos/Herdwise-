@@ -40,6 +40,9 @@ class QrIdentificationFlowTest extends TestCase
             ->assertSee($animal->animal_code)
             ->assertSee($farm->name)
             ->assertSee('Farm team sign-in required')
+            ->assertSee(asset('js/herdwise.js'), false)
+            ->assertSee('data-print-page', false)
+            ->assertDontSee('onclick=', false)
             ->assertSee(route('animals.qr-code', $animal), false);
     }
 

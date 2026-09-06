@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Print {{ $code }} QR card · HerdWise</title>
     <link rel="stylesheet" href="{{ asset('css/herdwise.css') }}">
+    <script defer src="{{ asset('js/herdwise.js') }}"></script>
 </head>
 <body class="print-card-page">
     <header class="print-toolbar no-print">
         <a class="back" href="{{ $backUrl }}">← Back to profile</a>
-        <div><span>Use 100% scale for the clearest scan.</span><button class="btn" type="button" onclick="window.print()">Print card</button></div>
+        <div><span>Use 100% scale for the clearest scan.</span><button class="btn" type="button" data-print-page>Print card</button></div>
     </header>
     <main class="livestock-print-sheet">
         <section class="livestock-id-card">

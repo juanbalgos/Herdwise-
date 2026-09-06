@@ -24,11 +24,11 @@ Route::redirect('/', '/dashboard');
 Route::get('/invitations/{token}', [FarmInvitationController::class, 'show'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:30,1')->name('invitations.show');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.store');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:registration')->name('register.store');
     Route::get('/register/veterinarian', [AuthController::class, 'showVeterinarianRegistration'])->name('veterinarian.register');
-    Route::post('/register/veterinarian', [AuthController::class, 'registerVeterinarian'])->name('veterinarian.register.store');
+    Route::post('/register/veterinarian', [AuthController::class, 'registerVeterinarian'])->middleware('throttle:registration')->name('veterinarian.register.store');
 });
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

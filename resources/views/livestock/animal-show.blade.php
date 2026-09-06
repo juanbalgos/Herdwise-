@@ -25,7 +25,7 @@
     @endif
     <a class="outline compact qr-action" href="{{ route('animals.print-card', $animal) }}">▦ Print QR card</a>
     @if(! $animal->archived_at && in_array($currentFarmRole, ['owner', 'manager'], true))
-        <form method="post" action="{{ route('animals.archive', $animal) }}" onsubmit="return confirm('Archive this animal and cancel its pending reminders?')">@csrf @method('patch')<button class="outline compact danger-outline">Archive</button></form>
+        <form method="post" action="{{ route('animals.archive', $animal) }}" data-confirm="Archive this animal and cancel its pending reminders?">@csrf @method('patch')<button class="outline compact danger-outline">Archive</button></form>
     @endif
 </div>
 

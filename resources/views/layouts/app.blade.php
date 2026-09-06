@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>@yield('title', 'HerdWise')</title>
     <link rel="stylesheet" href="{{ asset('css/herdwise.css') }}">
+    <script defer src="{{ asset('js/herdwise.js') }}"></script>
 </head>
 <body>
 <div class="shell">
