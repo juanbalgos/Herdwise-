@@ -228,7 +228,7 @@ class VeterinarianAccessFlowTest extends TestCase
         ]);
 
         $scanUrl = URL::signedRoute('identify.animals.scan', ['animal' => $animal]);
-        $this->actingAs($veterinarian)->get($scanUrl)->assertNotFound();
+        $this->actingAs($veterinarian)->get($scanUrl)->assertOk()->assertSee($animal->animal_code);
     }
 
     public function test_user_cannot_switch_to_an_unassigned_farm(): void

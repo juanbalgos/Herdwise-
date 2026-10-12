@@ -19,20 +19,53 @@ use Illuminate\Support\Str;
 
 class LivestockIdentificationController extends Controller
 {
-    public function scanAnimal(Request $request, Animal $animal): RedirectResponse
+    public function scanAnimal(Request $request, Animal $animal): View|RedirectResponse
     {
-        $this->activateFarmContext($request, $animal->farm_id);
-        $this->recordScan($request, $animal->farm_id, 'animal', $animal->id);
+        if ($this->canAccessFarm($request, $animal->farm_id)) {
+            $this->activateFarmContext($request, $animal->farm_id);
+            $this->recordScan($request, $animal->farm_id, 'animal', $animal->id);
 
-        return redirect()->route('animals.show', $animal);
+            return redirect()->route('animals.show', $animal);
+        }
+
+        $animal->load(['farm', 'species', 'breed']);
+
+        return view('identification.public-profile', [
+            'kind' => 'Individual animal',
+            'code' => $animal->animal_code,
+            'displayName' => $animal->name,
+            'farm' => $animal->farm,
+            'species' => $animal->species->name,
+            'breed' => $animal->breed?->name,
+            'details' => [
+                ['label' => 'Sex', 'value' => ucfirst($animal->sex)],
+                ['label' => 'Ear tag', 'value' => $animal->ear_tag ?: 'Not assigned'],
+            ],
+        ]);
     }
 
-    public function scanBatch(Request $request, LivestockBatch $batch): RedirectResponse
+    public function scanBatch(Request $request, LivestockBatch $batch): View|RedirectResponse
     {
-        $this->activateFarmContext($request, $batch->farm_id);
-        $this->recordScan($request, $batch->farm_id, 'batch', $batch->id);
+        if ($this->canAccessFarm($request, $batch->farm_id)) {
+            $this->activateFarmContext($request, $batch->farm_id);
+            $this->recordScan($request, $batch->farm_id, 'batch', $batch->id);
 
-        return redirect()->route('batches.show', $batch);
+            return redirect()->route('batches.show', $batch);
+        }
+
+        $batch->load(['farm', 'species', 'breed']);
+
+        return view('identification.public-profile', [
+            'kind' => 'Livestock batch',
+            'code' => $batch->batch_code,
+            'displayName' => $batch->species->name.' group',
+            'farm' => $batch->farm,
+            'species' => $batch->species->name,
+            'breed' => $batch->breed?->name,
+            'details' => [
+                ['label' => 'Purpose', 'value' => $batch->purpose ?: 'Not specified'],
+            ],
+        ]);
     }
 
     public function animalQrCode(Request $request, Animal $animal): Response
@@ -109,6 +142,13 @@ class LivestockIdentificationController extends Controller
             $request->user()->farms()->whereKey($farmId)->wherePivot('is_active', true)->exists(),
             404,
         );
+    }
+
+    private function canAccessFarm(Request $request, int $farmId): bool
+    {
+        $user = $request->user();
+
+        return $user !== null && $user->farms()->whereKey($farmId)->wherePivot('is_active', true)->exists();
     }
 
     private function qrCodeResponse(string $lookupUrl, string $filename): Response

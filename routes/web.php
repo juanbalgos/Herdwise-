@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 Route::get('/invitations/{token}', [FarmInvitationController::class, 'show'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:30,1')->name('invitations.show');
+Route::get('/identify/animals/{animal}', [LivestockIdentificationController::class, 'scanAnimal'])->middleware(['signed', 'throttle:60,1'])->name('identify.animals.scan');
+Route::get('/identify/batches/{batch}', [LivestockIdentificationController::class, 'scanBatch'])->middleware(['signed', 'throttle:60,1'])->name('identify.batches.scan');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.store');
@@ -53,8 +55,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('batches', BatchController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     Route::patch('/batches/{batch}/archive', [BatchController::class, 'archive'])->name('batches.archive');
     Route::patch('/batches/{batch}/restore', [BatchController::class, 'restore'])->name('batches.restore');
-    Route::get('/identify/animals/{animal}', [LivestockIdentificationController::class, 'scanAnimal'])->middleware('signed')->name('identify.animals.scan');
-    Route::get('/identify/batches/{batch}', [LivestockIdentificationController::class, 'scanBatch'])->middleware('signed')->name('identify.batches.scan');
     Route::get('/animals/{animal}/qr-code', [LivestockIdentificationController::class, 'animalQrCode'])->name('animals.qr-code');
     Route::get('/animals/{animal}/print-card', [LivestockIdentificationController::class, 'animalPrintCard'])->name('animals.print-card');
     Route::get('/batches/{batch}/qr-code', [LivestockIdentificationController::class, 'batchQrCode'])->name('batches.qr-code');

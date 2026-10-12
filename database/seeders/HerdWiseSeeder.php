@@ -43,9 +43,11 @@ class HerdWiseSeeder extends Seeder
         });
 
         $user = User::firstOrCreate(['email' => 'juan@herdwise.test'], ['name' => 'Juan Dela Cruz', 'password' => Hash::make('password')]);
+        $staff = User::firstOrCreate(['email' => 'staff@herdwise.test'], ['name' => 'Ana Reyes', 'password' => Hash::make('password')]);
         $veterinarian = User::firstOrCreate(['email' => 'vet@herdwise.test'], ['name' => 'Dr. Maria Santos', 'password' => Hash::make('password')]);
         $farm = Farm::firstOrCreate(['slug' => 'green-pastures-demo'], ['name' => 'Green Pastures Farm', 'location' => 'Nueva Ecija, Philippines']);
         $farm->users()->syncWithoutDetaching([$user->id => ['role' => 'owner', 'is_active' => true]]);
+        $farm->users()->syncWithoutDetaching([$staff->id => ['role' => 'staff', 'is_active' => true]]);
         $farm->users()->syncWithoutDetaching([$veterinarian->id => ['role' => 'veterinarian', 'is_active' => true]]);
         FarmAccessEvent::firstOrCreate(['farm_id' => $farm->id, 'subject_user_id' => $veterinarian->id, 'event_type' => 'veterinarian_access_accepted'], ['actor_user_id' => $user->id, 'metadata' => ['source' => 'demo_seed']]);
 

@@ -34,12 +34,12 @@
                 <div class="id-qr">
                     <img src="{{ $qrImageUrl }}" alt="QR code for {{ $code }}">
                     <strong>Scan to open record</strong>
-                    <small>Farm team sign-in required</small>
+                    <small>Public identification page</small>
                 </div>
             </div>
             <footer><span>{{ $farm->name }}</span><span>Printed {{ today()->format('M j, Y') }}</span></footer>
         </section>
-        <p class="print-help no-print">The QR returns an authorized farm member to this livestock profile. No registry or care details are shown before sign-in.</p>
+        <p class="print-help no-print">The QR opens a public identification page. Full care records remain available only to signed-in farm members.</p>
     </main>
 </body>
 </html>

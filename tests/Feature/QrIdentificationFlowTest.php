@@ -15,14 +15,19 @@ class QrIdentificationFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_scan_reveals_no_livestock_data_before_sign_in(): void
+    public function test_guest_scan_shows_only_the_public_animal_identification_card(): void
     {
-        [, , $animal] = $this->farmMemberWithLivestock();
+        [, $farm, $animal] = $this->farmMemberWithLivestock();
         $scanUrl = URL::signedRoute('identify.animals.scan', ['animal' => $animal]);
 
         $this->get($scanUrl)
-            ->assertRedirect(route('login'))
-            ->assertDontSee($animal->animal_code);
+            ->assertOk()
+            ->assertSee($animal->animal_code)
+            ->assertSee($animal->name)
+            ->assertSee($farm->name)
+            ->assertSee('Public identification only')
+            ->assertDontSee('LIVESTOCK HISTORY')
+            ->assertDontSee('Health observation');
     }
 
     public function test_farm_member_can_generate_and_print_an_animal_qr_card(): void
@@ -39,7 +44,7 @@ class QrIdentificationFlowTest extends TestCase
             ->assertOk()
             ->assertSee($animal->animal_code)
             ->assertSee($farm->name)
-            ->assertSee('Farm team sign-in required')
+            ->assertSee('Public identification page')
             ->assertSee(asset('js/herdwise.js'), false)
             ->assertSee('data-print-page', false)
             ->assertDontSee('onclick=', false)
@@ -69,7 +74,7 @@ class QrIdentificationFlowTest extends TestCase
         $this->actingAs($user)->get($tamperedUrl)->assertForbidden();
     }
 
-    public function test_other_farm_cannot_generate_print_or_open_animal_qr(): void
+    public function test_other_farm_cannot_generate_or_print_animal_qr_but_can_view_public_identification(): void
     {
         [$user] = $this->farmMemberWithLivestock();
         $otherAnimal = Animal::factory()->create();
@@ -77,12 +82,19 @@ class QrIdentificationFlowTest extends TestCase
 
         $this->actingAs($user)->get(route('animals.qr-code', $otherAnimal))->assertNotFound();
         $this->actingAs($user)->get(route('animals.print-card', $otherAnimal))->assertNotFound();
-        $this->actingAs($user)->get($scanUrl)->assertNotFound();
+        $this->actingAs($user)->get($scanUrl)->assertOk()->assertSee($otherAnimal->animal_code);
     }
 
     public function test_batch_qr_card_and_signed_scan_use_the_batch_profile(): void
     {
         [$user, $farm, , $batch] = $this->farmMemberWithLivestock();
+        $scanUrl = URL::signedRoute('identify.batches.scan', ['batch' => $batch]);
+
+        $this->get($scanUrl)
+            ->assertOk()
+            ->assertSee($batch->batch_code)
+            ->assertSee($farm->name)
+            ->assertSee('Public identification only');
 
         $this->actingAs($user)->get(route('batches.qr-code', $batch))
             ->assertOk()
@@ -93,7 +105,6 @@ class QrIdentificationFlowTest extends TestCase
             ->assertSee($batch->batch_code)
             ->assertSee($farm->name);
 
-        $scanUrl = URL::signedRoute('identify.batches.scan', ['batch' => $batch]);
         $this->actingAs($user)->get($scanUrl)
             ->assertRedirect(route('batches.show', $batch));
     }
