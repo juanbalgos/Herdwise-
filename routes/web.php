@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\Api\V1\CareActivityController as ApiCareActivityController;
 use App\Http\Controllers\Api\V1\LivestockController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\FarmAssistantController;
 use App\Http\Controllers\FarmContextController;
 use App\Http\Controllers\FarmInvitationController;
 use App\Http\Controllers\FarmReportController;
+use App\Http\Controllers\FarmSettingsController;
 use App\Http\Controllers\FarmTeamController;
 use App\Http\Controllers\LivestockIdentificationController;
 use App\Http\Controllers\NotificationController;
@@ -32,12 +34,17 @@ Route::middleware('guest')->group(function () {
 });
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/settings/account', [AccountSettingsController::class, 'index'])->name('settings.account.index');
+    Route::patch('/settings/account', [AccountSettingsController::class, 'updateProfile'])->name('settings.account.update');
+    Route::patch('/settings/account/password', [AccountSettingsController::class, 'updatePassword'])->name('settings.account.password.update');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/access/waiting', [AuthController::class, 'waitingForAccess'])->name('access.waiting');
     Route::post('/farm-context', [FarmContextController::class, 'update'])->name('farms.context.update');
     Route::post('/invitations/{token}/accept', [FarmInvitationController::class, 'accept'])->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:10,1')->name('invitations.accept');
     Route::get('/team', [FarmTeamController::class, 'index'])->name('team.index');
     Route::post('/team/invitations', [FarmTeamController::class, 'storeInvitation'])->name('team.invitations.store');
+    Route::get('/settings/farm', [FarmSettingsController::class, 'index'])->name('settings.farm.index');
+    Route::patch('/settings/farm', [FarmSettingsController::class, 'update'])->name('settings.farm.update');
     Route::patch('/team/invitations/{invitation}/revoke', [FarmTeamController::class, 'revokeInvitation'])->name('team.invitations.revoke');
     Route::patch('/team/members/{member}/revoke', [FarmTeamController::class, 'revokeMember'])->name('team.members.revoke');
     Route::resource('animals', AnimalController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);

@@ -21,10 +21,13 @@
             <a class="{{ request()->routeIs('weights.*') ? 'active' : '' }}" href="{{ route('weights.index') }}">⌁ <span>Growth & weight</span></a>
             @if($currentFarmRole === 'owner')
                 <a class="{{ request()->routeIs('team.*') ? 'active' : '' }}" href="{{ route('team.index') }}">♙ <span>Farm team</span></a>
+                <a class="{{ request()->routeIs('settings.farm.*') ? 'active' : '' }}" href="{{ route('settings.farm.index') }}">⚙ <span>Farm settings</span></a>
             @endif
             <p>INSIGHTS</p>
             <a class="{{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">◇ <span>Reports</span></a>
             <a class="{{ request()->routeIs('assistant.*') ? 'active' : '' }}" href="{{ route('assistant.index') }}">✦ <span>Record assistant</span></a>
+            <p>ACCOUNT</p>
+            <a class="{{ request()->routeIs('settings.account.*') ? 'active' : '' }}" href="{{ route('settings.account.index') }}">⚙ <span>My account</span></a>
         </nav>
         <div class="account">
             <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
